@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мини-мессенджер (16 символов)</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #121212;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: #1e1e1e;
+      padding: 24px;
+      border-radius: 12px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .msg-display {
+      background: #2a2a2a;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      min-height: 28px;
+      margin-bottom: 16px;
+      word-break: break-all;
+      color: #4ade80;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      background: #2a2a2a;
+      color: #fff;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div>Последнее сообщение:</div>
+    <div class="msg-display" id="display">...</div>
+
+    <input type="text" id="input" maxlength="16" placeholder="Макс. 16 символов">
+    <button onclick="sendMessage()">Отправить</button>
+
+    <div class="status" id="status">Подключение...</div>
+  </div>
+
+  <script>
+    const API_URL = 'http://103.82.102';
+
+    // Загрузка последнего сообщения
+    async function loadMessage() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        document.getElementById('display').textContent = data.message || '(пусто)';
+        document.getElementById('status').textContent = 'Онлайн';
+      } catch (err) {
+        document.getElementById('status').textContent = 'Ошибка соединения (проверьте HTTP/HTTPS)';
+      }
+    }
+
+    // Отправка нового сообщения
+    async function sendMessage() {
+      const input = document.getElementById('input');
+      const text = input.value.slice(0, 16);
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('display').textContent = data.message || '(пусто)';
+          input.value = '';
+          document.getElementById('status').textContent = 'Отправлено!';
+        }
+      } catch (err) {
+        document.getElementById('status').textContent = 'Ошибка отправки';
+      }
+    }
+
+    // Отправка по нажатию Enter
+    document.getElementById('input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // Обновляем каждые 2 секунды
+    loadMessage();
+    setInterval(loadMessage, 2000);
+  </script>
+</body>
+</html>
